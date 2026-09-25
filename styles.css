@@ -32,6 +32,8 @@
   --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-tamil-heading: 'Mukta Malar', 'Noto Sans Tamil', 'Outfit', sans-serif;
+  --font-tamil-body: 'Noto Sans Tamil', 'Plus Jakarta Sans', sans-serif;
   
   /* Layout & Spacing */
   --radius-sm: 8px;
@@ -69,6 +71,33 @@ body {
   overflow-x: hidden;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Tamil Typography Enhancements */
+html[lang="ta"] body {
+  font-family: var(--font-tamil-body);
+  line-height: 1.65;
+}
+
+html[lang="ta"] h1,
+html[lang="ta"] h2,
+html[lang="ta"] h3,
+html[lang="ta"] h4,
+html[lang="ta"] h5,
+html[lang="ta"] h6,
+html[lang="ta"] .brand-title,
+html[lang="ta"] .hero-heading-lead,
+html[lang="ta"] .hero-heading-main,
+html[lang="ta"] .section-title,
+html[lang="ta"] .step-card-title,
+html[lang="ta"] .map-title,
+html[lang="ta"] .impact-title,
+html[lang="ta"] .discovery-name,
+html[lang="ta"] .modal-title,
+html[lang="ta"] .diff-heading,
+html[lang="ta"] .fi-title {
+  font-family: var(--font-tamil-heading);
+  letter-spacing: normal;
 }
 
 /* Typography Defaults */
@@ -196,6 +225,66 @@ input:focus, select:focus {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+/* Language Switcher Sliding Pill */
+.lang-switch-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  background: rgba(22, 28, 39, 0.85);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-pill);
+  padding: 3px;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.45), 0 0 14px rgba(255, 107, 53, 0.12);
+  user-select: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.lang-pill-btn {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 13px;
+  border-radius: var(--radius-pill);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.25s ease, transform 0.15s ease;
+  min-width: 48px;
+}
+
+.lang-pill-btn:hover {
+  color: var(--text-primary);
+}
+
+.lang-pill-btn.active {
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(255, 107, 53, 0.6);
+}
+
+.lang-pill-slider {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc(50% - 3px);
+  background: linear-gradient(135deg, #ff6b35, #ea580c);
+  border-radius: var(--radius-pill);
+  box-shadow: 0 2px 10px rgba(255, 107, 53, 0.5);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.lang-switch-container.ta-active .lang-pill-slider {
+  transform: translateX(100%);
 }
 
 .btn-demo-preset {
@@ -2312,5 +2401,100 @@ input:focus, select:focus {
   
   .nav-links {
     display: none;
+  }
+}
+
+/* ============================================================================
+   CUSTOM ANIMATED CURSOR
+   ============================================================================ */
+.custom-cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  background: #ff6b35;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 99999;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.25s ease, width 0.2s ease, height 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 0 10px rgba(255, 107, 53, 0.95), 0 0 20px rgba(255, 107, 53, 0.6);
+  opacity: 0;
+}
+
+.custom-cursor-aura {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid rgba(255, 107, 53, 0.7);
+  background: radial-gradient(circle, rgba(255, 107, 53, 0.15) 0%, rgba(255, 107, 53, 0.02) 65%, transparent 100%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 99998;
+  transform: translate(-50%, -50%);
+  transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              height 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.25s ease,
+              background 0.25s ease,
+              box-shadow 0.25s ease,
+              opacity 0.25s ease;
+  box-shadow: 0 0 16px rgba(255, 107, 53, 0.25);
+  opacity: 0;
+}
+
+/* Visible when mouse is over window */
+body.cursor-active-window .custom-cursor-dot,
+body.cursor-active-window .custom-cursor-aura {
+  opacity: 1;
+}
+
+/* Hover state on clickable / interactive elements */
+body.cursor-hover .custom-cursor-aura {
+  width: 60px;
+  height: 60px;
+  border-color: rgba(255, 125, 77, 0.95);
+  background: radial-gradient(circle, rgba(255, 107, 53, 0.25) 0%, rgba(6, 182, 212, 0.12) 70%, transparent 100%);
+  box-shadow: 0 0 28px rgba(255, 107, 53, 0.55), 0 0 45px rgba(6, 182, 212, 0.28);
+  animation: cursor-aura-pulse 2s infinite ease-in-out;
+}
+
+body.cursor-hover .custom-cursor-dot {
+  width: 10px;
+  height: 10px;
+  background: #ffffff;
+  box-shadow: 0 0 12px #ffffff, 0 0 24px rgba(255, 107, 53, 0.9);
+}
+
+/* Click / Mousedown Press state */
+body.cursor-pressed .custom-cursor-aura {
+  width: 26px;
+  height: 26px;
+  border-color: #38bdf8;
+  background: rgba(6, 182, 212, 0.35);
+  box-shadow: 0 0 22px rgba(6, 182, 212, 0.7);
+}
+
+body.cursor-pressed .custom-cursor-dot {
+  transform: translate(-50%, -50%) scale(0.65);
+  background: #38bdf8;
+}
+
+@keyframes cursor-aura-pulse {
+  0%, 100% {
+    box-shadow: 0 0 24px rgba(255, 107, 53, 0.45), 0 0 40px rgba(6, 182, 212, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 34px rgba(255, 107, 53, 0.8), 0 0 54px rgba(6, 182, 212, 0.45);
+  }
+}
+
+/* Touch device protection: hide custom cursor on touchscreens */
+@media (pointer: coarse), (hover: none) {
+  .custom-cursor-dot,
+  .custom-cursor-aura {
+    display: none !important;
   }
 }

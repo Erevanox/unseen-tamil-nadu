@@ -1,20 +1,27 @@
 // ============================================================================
 // UNSEEN TAMIL NADU — APPLICATION CONTROLLER
-// Interactive Map, Dynamic Ranking Engine, Recalculator & Hackathon Demo Flow
+// Interactive Map, Dynamic Ranking Engine, Recalculator, Bilingual Switcher & Animated Cursor
 // ============================================================================
 
-import { 
-  DESTINATIONS, 
-  DISCOVERIES, 
-  ROUTE_MATRIX, 
-  INTEREST_OPTIONS, 
-  TIME_OPTIONS, 
-  BUDGET_OPTIONS, 
-  TRANSPORT_OPTIONS, 
-  TIME_OF_DAY_OPTIONS 
+import {
+  DESTINATIONS,
+  DISCOVERIES,
+  ROUTE_MATRIX,
+  INTEREST_OPTIONS,
+  TIME_OPTIONS,
+  BUDGET_OPTIONS,
+  TRANSPORT_OPTIONS,
+  TIME_OF_DAY_OPTIONS
 } from './data.js';
 
 import { TAMIL_NADU_BORDER_COORDINATES } from './geo_boundary.js';
+
+import {
+  t,
+  getCurrentLanguage,
+  setLanguage,
+  applyStaticTranslations
+} from './translations.js';
 
 // ============================================================================
 // APPLICATION STATE
@@ -47,6 +54,9 @@ let borderPolygon = null;
 // INITIALIZATION
 // ============================================================================
 document.addEventListener('DOMContentLoaded', () => {
+  const savedLang = getCurrentLanguage();
+  initLanguageUI(savedLang);
+  initAnimatedCursor();
   initStartingPointSelector();
   initMap();
   renderWizardOptions();
@@ -56,19 +66,166 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ============================================================================
+// BILINGUAL LANGUAGE SWITCHER CONTROLLER (ENGLISH ↔ TAMIL)
+// ============================================================================
+function initLanguageUI(lang) {
+  setLanguage(lang);
+  applyStaticTranslations();
+  updateLangToggleButtons(lang);
+}
+
+function updateLangToggleButtons(lang) {
+  const container = document.getElementById('lang-switch-container');
+  const btnEn = document.getElementById('btn-lang-en');
+  const btnTa = document.getElementById('btn-lang-ta');
+
+  if (lang === 'ta') {
+    container?.classList.add('ta-active');
+    btnEn?.classList.remove('active');
+    btnEn?.setAttribute('aria-pressed', 'false');
+    btnTa?.classList.add('active');
+    btnTa?.setAttribute('aria-pressed', 'true');
+  } else {
+    container?.classList.remove('ta-active');
+    btnTa?.classList.remove('active');
+    btnTa?.setAttribute('aria-pressed', 'false');
+    btnEn?.classList.add('active');
+    btnEn?.setAttribute('aria-pressed', 'true');
+  }
+}
+
+export function switchLanguage(lang) {
+  setLanguage(lang);
+  applyStaticTranslations();
+  updateLangToggleButtons(lang);
+
+  // Re-render dynamic UI components with updated language
+  initStartingPointSelector();
+  updateTransportAssumptionsUI();
+  updateJourneyUI();
+  renderWizardOptions();
+
+  // Re-render map markers with updated language
+  DESTINATIONS.forEach(dest => renderDestinationMarker(dest));
+
+  // If discoveries were generated, re-render discovery cards, markers, recalculator and timeline
+  if (state.currentDiscoveries.length > 0) {
+    rankAndRenderDiscoveries(false);
+  } else {
+    updateRecalculatorTotals();
+  }
+
+  // If modal is currently open, refresh modal contents
+  if (state.activeModalDiscovery) {
+    window.openDiscoveryModal(state.activeModalDiscovery.id);
+  }
+}
+
+// ============================================================================
+// INTERACTIVE ANIMATED CURSOR CONTROLLER
+// Fluid glowing dot + smooth trailing aura circle + hover & click magnetic effects
+// ============================================================================
+function initAnimatedCursor() {
+  const dot = document.getElementById('cursor-dot');
+  const aura = document.getElementById('cursor-aura');
+  if (!dot || !aura) return;
+
+  // Track positions
+  let mouseX = window.innerWidth / 2;
+  let mouseY = window.innerHeight / 2;
+  let auraX = mouseX;
+  let auraY = mouseY;
+  let isMoving = false;
+  const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+
+  if (isCoarsePointer) return;
+
+  window.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    
+    // Direct instant update for inner glowing dot
+    dot.style.left = `${mouseX}px`;
+    dot.style.top = `${mouseY}px`;
+
+    if (!isMoving) {
+      document.body.classList.add('cursor-active-window');
+      isMoving = true;
+    }
+  }, { passive: true });
+
+  // Smooth fluid lerp loop for outer glowing aura ring
+  function animateAura() {
+    auraX += (mouseX - auraX) * 0.18;
+    auraY += (mouseY - auraY) * 0.18;
+
+    aura.style.left = `${auraX}px`;
+    aura.style.top = `${auraY}px`;
+
+    requestAnimationFrame(animateAura);
+  }
+  requestAnimationFrame(animateAura);
+
+  // Mouse leave / enter window
+  document.addEventListener('mouseleave', () => {
+    document.body.classList.remove('cursor-active-window');
+    isMoving = false;
+  });
+
+  document.addEventListener('mouseenter', () => {
+    document.body.classList.add('cursor-active-window');
+  });
+
+  // Mousedown & mouseup press effects
+  window.addEventListener('mousedown', () => {
+    document.body.classList.add('cursor-pressed');
+  });
+
+  window.addEventListener('mouseup', () => {
+    document.body.classList.remove('cursor-pressed');
+  });
+
+  // Global event delegation for hover states on interactive items
+  const interactiveSelector = `
+    a, button, input, select, textarea,
+    .interest-card, .option-pill-card, .transport-card, .time-slot-card,
+    .discovery-card, .journey-stop-item, .custom-pin-dest, .custom-pin-discovery,
+    .leaflet-marker-icon, .btn-demo-preset, .btn-primary-explore, .btn-secondary-demo,
+    .btn-launch-discovery, .btn-card-toggle, .btn-card-details, .btn-close-modal,
+    .lang-pill-btn, .how-step-card, .hero-feature-box, .comparison-box, .cost-separation-banner
+  `;
+
+  document.addEventListener('mouseover', (e) => {
+    const target = e.target.closest(interactiveSelector);
+    if (target) {
+      document.body.classList.add('cursor-hover');
+    }
+  });
+
+  document.addEventListener('mouseout', (e) => {
+    const target = e.target.closest(interactiveSelector);
+    if (target) {
+      document.body.classList.remove('cursor-hover');
+    }
+  });
+}
+
+// ============================================================================
 // STARTING POINT SELECTOR INITIALIZATION
 // ============================================================================
 function initStartingPointSelector() {
   const select = document.getElementById('select-starting-point');
   if (!select) return;
 
-  select.innerHTML = DESTINATIONS.map(d => 
-    `<option value="${d.id}" ${d.id === state.startingPoint ? 'selected' : ''}>${d.name} (${d.tamilName})</option>`
+  const isTamil = getCurrentLanguage() === 'ta';
+
+  select.innerHTML = DESTINATIONS.map(d =>
+    `<option value="${d.id}" ${d.id === state.startingPoint ? 'selected' : ''}>${isTamil ? d.tamilName : d.name} (${isTamil ? d.name : d.tamilName})</option>`
   ).join('');
 
-  select.addEventListener('change', (e) => {
+  select.onchange = (e) => {
     state.startingPoint = e.target.value;
-    
+
     // Remove starting point from destinations if already present to avoid duplicate immediate stop
     const idx = state.selectedDestinations.indexOf(state.startingPoint);
     if (idx > -1) {
@@ -84,7 +241,7 @@ function initStartingPointSelector() {
     if (state.currentDiscoveries.length > 0) {
       rankAndRenderDiscoveries(false);
     }
-  });
+  };
 }
 
 // Get the complete main route from Starting Point through all selected destinations
@@ -106,7 +263,7 @@ function initMap() {
 
   // Exact geographic center of Tamil Nadu
   const TN_CENTER = [11.1271, 78.6569];
-  
+
   map = L.map('tamil-nadu-map', {
     center: TN_CENTER,
     zoom: 7,
@@ -149,12 +306,13 @@ function renderDestinationMarker(dest) {
   const isStartingPoint = dest.id === state.startingPoint;
   const isSelected = state.selectedDestinations.includes(dest.id);
   const selectedIndex = state.selectedDestinations.indexOf(dest.id);
+  const isTamil = getCurrentLanguage() === 'ta';
 
-  let badgeText = dest.name.slice(0, 2).toUpperCase();
+  let badgeText = isTamil ? dest.tamilName.slice(0, 1) : dest.name.slice(0, 2).toUpperCase();
   let pinClass = '';
 
   if (isStartingPoint) {
-    badgeText = 'START';
+    badgeText = isTamil ? 'தொட' : 'START';
     pinClass = 'starting-origin';
   } else if (isSelected) {
     badgeText = String(selectedIndex + 1).padStart(2, '0');
@@ -180,20 +338,20 @@ function renderDestinationMarker(dest) {
   // Create popup content with Tamil script, details, and action buttons
   const popupHtml = `
     <div class="map-popup-inner">
-      <div class="popup-tag">${isStartingPoint ? 'TRIP STARTING POINT' : dest.category}</div>
+      <div class="popup-tag">${isStartingPoint ? t('popup-starting-point') : dest.category}</div>
       <h4 class="popup-title">${dest.name} <span style="font-size: 0.85rem; color: #ff8a5c; font-weight: normal;">(${dest.tamilName})</span></h4>
       <p class="popup-desc">${dest.tagline}</p>
       ${isStartingPoint ? `
         <div style="font-size: 0.82rem; color: #34d399; font-weight: 700; padding: 6px 0;">
-          🚩 Currently Selected as Starting Point
+          ${t('popup-currently-start')}
         </div>
       ` : `
         <div style="display: flex; gap: 8px; margin-top: 6px;">
           <button class="btn-popup-add ${isSelected ? 'already-added' : ''}" onclick="window.toggleDestinationFromMap('${dest.id}')">
-            ${isSelected ? '✓ In Journey' : '+ Add Stop'}
+            ${isSelected ? t('popup-in-journey') : t('popup-add-stop')}
           </button>
           <button class="btn-popup-add" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #34d399;" onclick="window.setAsStartingPointFromMap('${dest.id}')">
-            Set Start
+            ${t('popup-set-start')}
           </button>
         </div>
       `}
@@ -204,14 +362,14 @@ function renderDestinationMarker(dest) {
 }
 
 // Global hook for popup clicks
-window.toggleDestinationFromMap = function(destId) {
+window.toggleDestinationFromMap = function (destId) {
   toggleDestination(destId);
   if (destinationMarkers[destId]) {
     destinationMarkers[destId].closePopup();
   }
 };
 
-window.setAsStartingPointFromMap = function(destId) {
+window.setAsStartingPointFromMap = function (destId) {
   state.startingPoint = destId;
   const select = document.getElementById('select-starting-point');
   if (select) select.value = destId;
@@ -245,10 +403,10 @@ function toggleDestination(destId) {
 
   // Refresh destination markers on the map
   DESTINATIONS.forEach(dest => renderDestinationMarker(dest));
-  
+
   // Re-draw route polylines from starting point through all destinations
   updateMapRouteLine();
-  
+
   // Update UI tray and breakdown
   updateJourneyUI();
 
@@ -310,9 +468,9 @@ function calculateLegMetrics(destAId, destBId) {
   const lat1 = a.coordinates[0] * Math.PI / 180;
   const lat2 = b.coordinates[0] * Math.PI / 180;
 
-  const haversine = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                    Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2);
-  const c = 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1-haversine));
+  const haversine = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+  const c = 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
   const rawDist = R * c;
   const roadDist = Math.round(rawDist * 1.32); // Authentic Indian highway detour factor
   const roadTime = Math.round((roadDist / 55) * 60); // Average 55 km/h driving speed
@@ -325,10 +483,10 @@ function calculateLegMetrics(destAId, destBId) {
 function calculateBaseRouteTotals() {
   const fullRoute = getFullMainRoute();
   if (fullRoute.length < 2) {
-    return { 
-      totalDistanceKm: 0, 
-      totalTravelTimeMinutes: 0, 
-      totalTollCost: 0, 
+    return {
+      totalDistanceKm: 0,
+      totalTravelTimeMinutes: 0,
+      totalTollCost: 0,
       mainTripCost: 0,
       legs: []
     };
@@ -341,7 +499,7 @@ function calculateBaseRouteTotals() {
 
   for (let i = 0; i < fullRoute.length - 1; i++) {
     const fromId = fullRoute[i];
-    const toId = fullRoute[i+1];
+    const toId = fullRoute[i + 1];
     const leg = calculateLegMetrics(fromId, toId);
     totalDist += leg.distanceKm;
     totalTime += leg.travelTimeMinutes;
@@ -394,27 +552,30 @@ function updateTransportAssumptionsUI() {
   const publicRow = document.getElementById('public-transit-fare-row');
   const headingText = document.getElementById('assumption-heading-text');
   const subText = document.getElementById('assumption-sub-text');
+  const isTamil = getCurrentLanguage() === 'ta';
 
   if (state.transportMode === 'public') {
     // For Public Transport: DO NOT show mileage or fuel-price fields!
     if (vehicleRow) vehicleRow.style.display = 'none';
     if (publicRow) publicRow.style.display = 'flex';
-    if (headingText) headingText.textContent = 'Public Transport Fare Assumptions';
-    if (subText) subText.textContent = 'Calculated using standard intercity bus & rail fare averages in Tamil Nadu (₹1.85 / km) [Estimated]';
+    if (headingText) headingText.textContent = isTamil ? 'பொதுப் போக்குவரத்து கட்டண அனுமானங்கள்' : 'Public Transport Fare Assumptions';
+    if (subText) subText.textContent = isTamil ? 'தமிழ்நாடு பேருந்து & ரயில் சராசரி கட்டணங்கள் (₹1.85 / கி.மீ.) [மதிப்பீடு]' : 'Calculated using standard intercity bus & rail fare averages in Tamil Nadu (₹1.85 / km) [Estimated]';
   } else if (state.transportMode === 'mixed') {
     if (vehicleRow) vehicleRow.style.display = 'flex';
     if (publicRow) publicRow.style.display = 'flex';
-    if (headingText) headingText.textContent = 'Mixed Mobility Cost Assumptions';
-    if (subText) subText.textContent = 'Blended model: 50% Public Transit (₹1.85/km) + 50% Private Vehicle (Mileage & Fuel) [Estimated]';
+    if (headingText) headingText.textContent = isTamil ? 'கலப்பு போக்குவரத்து செலவு அனுமானங்கள்' : 'Mixed Mobility Cost Assumptions';
+    if (subText) subText.textContent = isTamil ? 'கலப்பு மாதிரி: 50% பொது போக்குவரத்து (₹1.85/கி.மீ.) + 50% தனி வாகனம் [மதிப்பீடு]' : 'Blended model: 50% Public Transit (₹1.85/km) + 50% Private Vehicle (Mileage & Fuel) [Estimated]';
   } else {
     // Car or Bike
     if (vehicleRow) vehicleRow.style.display = 'flex';
     if (publicRow) publicRow.style.display = 'none';
     const isCar = state.transportMode === 'car';
-    if (headingText) headingText.textContent = isCar ? 'Car Cost Assumptions' : 'Bike Cost Assumptions';
-    if (subText) subText.textContent = isCar 
-      ? 'Formula: (Distance ÷ Mileage) × Fuel Price + Tolls [Estimated]'
-      : 'Formula: (Distance ÷ Mileage) × Fuel Price [Estimated]';
+    if (headingText) headingText.textContent = isCar
+      ? (isTamil ? 'கார் செலவு அனுமானங்கள்' : 'Car Cost Assumptions')
+      : (isTamil ? 'இரு சக்கர வாகன செலவு அனுமானங்கள்' : 'Bike Cost Assumptions');
+    if (subText) subText.textContent = isCar
+      ? (isTamil ? 'சூத்திரம்: (தூரம் ÷ மைலேஜ்) × எரிபொருள் விலை + சுங்கம் [மதிப்பீடு]' : 'Formula: (Distance ÷ Mileage) × Fuel Price + Tolls [Estimated]')
+      : (isTamil ? 'சூத்திரம்: (தூரம் ÷ மைலேஜ்) × எரிபொருள் விலை [மதிப்பீடு]' : 'Formula: (Distance ÷ Mileage) × Fuel Price [Estimated]');
   }
 }
 
@@ -428,13 +589,20 @@ function updateJourneyUI() {
   const breakdownBox = document.getElementById('route-breakdown-box');
   const breakdownTbody = document.getElementById('route-breakdown-tbody');
   const statusPill = document.getElementById('map-status-pill');
+  const isTamil = getCurrentLanguage() === 'ta';
 
   const startDest = DESTINATIONS.find(d => d.id === state.startingPoint) || DESTINATIONS[0];
   const count = state.selectedDestinations.length;
-  countSpan.textContent = `Origin: ${startDest.name} + ${count} destination${count === 1 ? '' : 's'}`;
+
+  if (isTamil) {
+    countSpan.textContent = `தொடக்கப் புள்ளி: ${startDest.tamilName} + ${count} இடங்கள்`;
+    statusPill.textContent = count > 0 ? `ஆரம்பம்: ${startDest.tamilName} → ${count} நிறுத்தங்கள்` : `ஆரம்பம்: ${startDest.tamilName} ${t('pick-next')}`;
+  } else {
+    countSpan.textContent = `Origin: ${startDest.name} + ${count} destination${count === 1 ? '' : 's'}`;
+    statusPill.textContent = count > 0 ? `Origin: ${startDest.name} → ${count} stop${count > 1 ? 's' : ''}` : `Origin: ${startDest.name} (Pick next destination)`;
+  }
 
   continueBtn.disabled = count === 0;
-  statusPill.textContent = count > 0 ? `Origin: ${startDest.name} → ${count} stop${count > 1 ? 's' : ''}` : `Origin: ${startDest.name} (Pick next destination)`;
 
   // Render list of stops starting with the Starting Point
   let html = `
@@ -443,18 +611,18 @@ function updateJourneyUI() {
         <div class="stop-number-badge" style="background: rgba(16, 185, 129, 0.25); color: #34d399; font-weight: 800;">🚩</div>
         <div class="stop-details">
           <h4>${startDest.name} (${startDest.tamilName})</h4>
-          <span style="color: #34d399; font-weight: 600;">Trip Starting Point (Origin)</span>
+          <span style="color: #34d399; font-weight: 600;">${t('trip-starting-origin')}</span>
         </div>
       </div>
-      <span style="font-size: 0.72rem; color: #a7f3d0; padding: 4px 10px; background: rgba(16, 185, 129, 0.2); border-radius: 4px; font-weight: 700;">START</span>
+      <span style="font-size: 0.72rem; color: #a7f3d0; padding: 4px 10px; background: rgba(16, 185, 129, 0.2); border-radius: 4px; font-weight: 700;">${t('start-badge')}</span>
     </div>
   `;
 
   if (count === 0) {
     html += `
       <div class="empty-tray-state" id="empty-tray-msg" style="padding: 20px 10px;">
-        <p style="color: #cbd5e1;">Next: Select destinations on the map to build your route from <strong>${startDest.name}</strong>.</p>
-        <p style="margin-top: 6px; font-size: 0.8rem; color: #ff6b35;">Or click "Try Example" below.</p>
+        <p style="color: #cbd5e1;">${t('select-destinations-from')} <strong>${isTamil ? startDest.tamilName : startDest.name}</strong>.</p>
+        <p style="margin-top: 6px; font-size: 0.8rem; color: #ff6b35;">${t('or-try-example')}</p>
       </div>
     `;
   } else {
@@ -466,7 +634,7 @@ function updateJourneyUI() {
           <div class="stop-info">
             <div class="stop-number-badge">${String(i + 1).padStart(2, '0')}</div>
             <div class="stop-details">
-              <h4>${dest.name}</h4>
+              <h4>${dest.name} (${dest.tamilName})</h4>
               <span>${dest.category}</span>
             </div>
           </div>
@@ -492,7 +660,7 @@ function updateJourneyUI() {
 
       tbHtml += `
         <tr>
-          <td><strong>${a.name}</strong> → <strong>${b.name}</strong></td>
+          <td><strong>${isTamil ? a.tamilName : a.name}</strong> → <strong>${isTamil ? b.tamilName : b.name}</strong></td>
           <td>${leg.distanceKm} km</td>
           <td>${timeStr}</td>
         </tr>
@@ -507,7 +675,7 @@ function updateJourneyUI() {
   updateRecalculatorTotals();
 }
 
-window.removeDestination = function(destId) {
+window.removeDestination = function (destId) {
   toggleDestination(destId);
 };
 
@@ -519,14 +687,18 @@ function renderWizardOptions() {
   const interestsGrid = document.getElementById('interests-grid');
   interestsGrid.innerHTML = INTEREST_OPTIONS.map(opt => {
     const isSelected = state.selectedInterests.has(opt.id);
+    const key = `interest-${opt.id.toLowerCase().replace(/\s+/g, '-')}`;
+    const label = t(key) || opt.label;
+    const desc = t(`${key}-desc`) || opt.desc;
+
     return `
       <div class="interest-card ${isSelected ? 'selected' : ''}" data-interest="${opt.id}">
         <div class="interest-top-row">
           <span class="interest-icon">${opt.icon}</span>
           <span class="interest-check">✓</span>
         </div>
-        <div class="interest-title">${opt.label}</div>
-        <div class="interest-desc">${opt.desc}</div>
+        <div class="interest-title">${label}</div>
+        <div class="interest-desc">${desc}</div>
       </div>
     `;
   }).join('');
@@ -535,10 +707,18 @@ function renderWizardOptions() {
   const timeGrid = document.getElementById('time-options-grid');
   timeGrid.innerHTML = TIME_OPTIONS.map(opt => {
     const isSelected = state.availableExtraTime.id === opt.id;
+    let label = opt.label;
+    if (opt.id === 1) label = t('time-30m');
+    else if (opt.id === 2) label = t('time-1h');
+    else if (opt.id === 3) label = t('time-2h');
+    else if (opt.id === 4) label = t('time-3h');
+    else if (opt.id === 5) label = t('time-flexible');
+
+    const sub = opt.maxMinutes < 900 ? t('time-sub-max', opt.maxMinutes) : t('time-sub-no-limit');
     return `
       <div class="option-pill-card ${isSelected ? 'selected' : ''}" data-time-id="${opt.id}">
-        <div class="pill-card-title">${opt.label}</div>
-        <div class="pill-card-sub">${opt.maxMinutes < 900 ? `Max +${opt.maxMinutes}m detour` : 'No hard limit'}</div>
+        <div class="pill-card-title">${label}</div>
+        <div class="pill-card-sub">${sub}</div>
       </div>
     `;
   }).join('');
@@ -550,7 +730,7 @@ function renderWizardOptions() {
     return `
       <div class="option-pill-card ${isSelected ? 'selected' : ''}" data-budget-id="${opt.id}">
         <div class="pill-card-title">${opt.label}</div>
-        <div class="pill-card-sub">Added spend</div>
+        <div class="pill-card-sub">${t('budget-added-spend')}</div>
       </div>
     `;
   }).join('');
@@ -559,10 +739,16 @@ function renderWizardOptions() {
   const transportGrid = document.getElementById('transport-grid');
   transportGrid.innerHTML = TRANSPORT_OPTIONS.map(opt => {
     const isSelected = state.transportMode === opt.id;
+    let label = opt.label;
+    if (opt.id === 'car') label = t('transport-car');
+    else if (opt.id === 'bike') label = t('transport-bike');
+    else if (opt.id === 'public') label = t('transport-public');
+    else if (opt.id === 'mixed') label = t('transport-mixed');
+
     return `
       <div class="transport-card ${isSelected ? 'selected' : ''}" data-transport-id="${opt.id}">
         <div class="transport-icon">${opt.icon}</div>
-        <div class="transport-name">${opt.label}</div>
+        <div class="transport-name">${label}</div>
       </div>
     `;
   }).join('');
@@ -571,10 +757,16 @@ function renderWizardOptions() {
   const timeOfDayGrid = document.getElementById('time-of-day-grid');
   timeOfDayGrid.innerHTML = TIME_OF_DAY_OPTIONS.map(opt => {
     const isSelected = state.timeOfDay === opt.id;
+    let label = opt.label;
+    if (opt.id === 'Morning') label = t('tod-morning');
+    else if (opt.id === 'Afternoon') label = t('tod-afternoon');
+    else if (opt.id === 'Evening') label = t('tod-evening');
+    else if (opt.id === 'Night') label = t('tod-night');
+
     return `
       <div class="time-slot-card ${isSelected ? 'selected' : ''}" data-tod="${opt.id}">
         <div class="time-slot-icon">${opt.icon}</div>
-        <div class="time-slot-title">${opt.label}</div>
+        <div class="time-slot-title">${label}</div>
         <div class="time-slot-period">${opt.period}</div>
       </div>
     `;
@@ -587,10 +779,10 @@ function renderWizardOptions() {
 // ============================================================================
 function computeDiscoveryScore(disc) {
   const fullRouteIds = getFullMainRoute();
-  
+
   // 1. Distance proximity to ANY point along user's chosen route
   const isDirectlyAdjacent = fullRouteIds.includes(disc.destinationId);
-  const distanceScore = isDirectlyAdjacent 
+  const distanceScore = isDirectlyAdjacent
     ? Math.max(0, 1 - (disc.distanceKm / 45))
     : 0.35; // Lower score if further away
 
@@ -599,7 +791,7 @@ function computeDiscoveryScore(disc) {
   disc.interestTags.forEach(tag => {
     if (state.selectedInterests.has(tag)) interestMatchCount++;
   });
-  const interestScore = state.selectedInterests.size > 0 
+  const interestScore = state.selectedInterests.size > 0
     ? Math.min(1, interestMatchCount / Math.min(3, state.selectedInterests.size))
     : 0.5;
 
@@ -616,7 +808,7 @@ function computeDiscoveryScore(disc) {
   }
 
   // 4. Experience Uniqueness (15% Weight)
-  const uniquenessScore = (disc.rating - 4.0) / 1.0; 
+  const uniquenessScore = (disc.rating - 4.0) / 1.0;
 
   // 5. Less-Obvious Signal (10% Weight)
   const lessObviousScore = disc.popularity === "Low" ? 1.0 : (disc.popularity === "Medium-Low" ? 0.8 : 0.6);
@@ -641,7 +833,7 @@ function computeDiscoveryScore(disc) {
   }
 
   // Final Composite Weighted Score
-  const totalWeightedScore = 
+  const totalWeightedScore =
     (interestScore * 0.25) +
     (timeScore * 0.20) +
     (distanceScore * 0.15) +
@@ -651,17 +843,17 @@ function computeDiscoveryScore(disc) {
     (costScore * 0.05);
 
   // Qualitative Human-Readable Indicators (Section 32)
-  const timeFitLabel = totalDiscTime <= (state.availableExtraTime.maxMinutes || 999) 
-    ? (totalDiscTime <= 45 ? "Time fit: Excellent" : "Time fit: Good") 
-    : "Time fit: Tight (+min)";
+  const timeFitLabel = totalDiscTime <= (state.availableExtraTime.maxMinutes || 999)
+    ? (totalDiscTime <= 45 ? t('time-fit-excellent') : t('time-fit-good'))
+    : t('time-fit-tight');
 
   const budgetFitLabel = totalCost <= (state.extraBudget.maxCost || 99999)
-    ? "Budget fit: Excellent"
-    : "Budget fit: Moderate";
+    ? t('budget-fit-excellent')
+    : t('budget-fit-moderate');
 
-  const interestFitLabel = interestMatchCount >= 2 
-    ? "Interest match: Strong" 
-    : (interestMatchCount === 1 ? "Interest match: Good" : "Interest match: General");
+  const interestFitLabel = interestMatchCount >= 2
+    ? t('interest-match-strong')
+    : (interestMatchCount === 1 ? t('interest-match-good') : t('interest-match-general'));
 
   return {
     score: totalWeightedScore,
@@ -678,6 +870,7 @@ function computeDiscoveryScore(disc) {
 // ============================================================================
 function rankAndRenderDiscoveries(shouldScroll = true) {
   const fullRouteIds = getFullMainRoute();
+  const isTamil = getCurrentLanguage() === 'ta';
 
   // Filter discoveries associated with or nearby starting point and selected destinations
   const candidatePool = DISCOVERIES.map(disc => {
@@ -713,9 +906,9 @@ function rankAndRenderDiscoveries(shouldScroll = true) {
   const destContext = document.getElementById('results-dest-context');
   const cityNames = fullRouteIds.map(id => {
     const d = DESTINATIONS.find(x => x.id === id);
-    return d ? d.name : id;
+    return d ? (isTamil ? d.tamilName : d.name) : id;
   });
-  destContext.textContent = `Route: ${cityNames.slice(0, 3).join(' → ')}${cityNames.length > 3 ? ` +${cityNames.length - 3} more` : ''}`;
+  destContext.textContent = `${isTamil ? 'பாதை' : 'Route'}: ${cityNames.slice(0, 3).join(' → ')}${cityNames.length > 3 ? ` +${cityNames.length - 3}` : ''}`;
 
   if (shouldScroll) {
     resultsSec.scrollIntoView({ behavior: 'smooth' });
@@ -724,10 +917,12 @@ function rankAndRenderDiscoveries(shouldScroll = true) {
 
 function renderDiscoveryCards() {
   const grid = document.getElementById('discoveries-grid');
+  const isTamil = getCurrentLanguage() === 'ta';
+
   grid.innerHTML = state.currentDiscoveries.map((disc) => {
     const isInJourney = state.selectedDiscoveries.has(disc.id);
     const nearDest = DESTINATIONS.find(d => d.id === disc.destinationId);
-    
+
     const hrs = Math.floor(disc.totalDiscTime / 60);
     const mins = disc.totalDiscTime % 60;
     const totalTimeFormatted = hrs > 0 ? `+${hrs}h ${mins > 0 ? `${mins}m` : ''}` : `+${mins}m`;
@@ -744,8 +939,8 @@ function renderDiscoveryCards() {
 
         <div class="discovery-body">
           <div class="discovery-near-row">
-            <span>Near <strong class="near-dest-name">${nearDest ? nearDest.name : 'Route'}</strong></span>
-            <span>★ ${disc.rating} (${disc.reviewCount} local notes)</span>
+            <span>${t('near-label')} <strong class="near-dest-name">${nearDest ? (isTamil ? nearDest.tamilName : nearDest.name) : (isTamil ? 'பாதை' : 'Route')}</strong></span>
+            <span>★ ${disc.rating} (${disc.reviewCount} ${t('local-notes')})</span>
           </div>
 
           <h3 class="discovery-name">${disc.name}</h3>
@@ -755,28 +950,28 @@ function renderDiscoveryCards() {
           <div class="trade-off-metrics-card">
             <div class="metrics-row-top">
               <div class="metric-col-item">
-                <span>Detour Dist</span>
+                <span>${t('detour-dist')}</span>
                 <strong>+${disc.distanceKm} km</strong>
               </div>
               <div class="metric-col-item">
-                <span>Extra Time</span>
+                <span>${t('extra-time')}</span>
                 <strong>${totalTimeFormatted}</strong>
               </div>
               <div class="metric-col-item cost">
-                <span>Est. Added Cost</span>
+                <span>${t('est-added-cost')}</span>
                 <strong>+₹${disc.totalCost}</strong>
               </div>
             </div>
 
             <div class="metrics-row-bottom">
-              <span class="timing-badge">🕒 Best: <strong>${disc.bestTime}</strong> (${disc.openingHours})</span>
+              <span class="timing-badge">🕒 ${t('best-label')} <strong>${disc.bestTime}</strong> (${disc.openingHours})</span>
               <span style="color: #64748b;">${disc.interestTags.slice(0, 2).join(' · ')}</span>
             </div>
           </div>
 
           <!-- Match Indicators (Section 32) -->
           <div class="match-indicators-bar">
-            <span class="match-chip ${disc.timeFitLabel.includes('Tight') ? 'warn' : 'good'}">${disc.timeFitLabel}</span>
+            <span class="match-chip ${disc.timeFitLabel.includes('Tight') || disc.timeFitLabel.includes('இறுக்கம்') ? 'warn' : 'good'}">${disc.timeFitLabel}</span>
             <span class="match-chip good">${disc.budgetFitLabel}</span>
             <span class="match-chip good">${disc.interestFitLabel}</span>
           </div>
@@ -784,10 +979,10 @@ function renderDiscoveryCards() {
           <!-- Actions -->
           <div class="discovery-card-actions">
             <button class="btn-card-details" onclick="window.openDiscoveryModal('${disc.id}')">
-              View Details
+              ${t('btn-view-details')}
             </button>
             <button class="btn-card-toggle ${isInJourney ? 'in-journey' : ''}" onclick="window.toggleDiscoveryInJourney('${disc.id}')">
-              ${isInJourney ? '✓ In Journey' : '+ Add to Journey'}
+              ${isInJourney ? t('btn-in-journey') : t('btn-add-journey')}
             </button>
           </div>
         </div>
@@ -828,7 +1023,7 @@ function renderDiscoveryMapMarkers() {
         </div>
         <p class="popup-desc">${disc.description}</p>
         <button class="btn-popup-add ${isAdded ? 'already-added' : ''}" onclick="window.toggleDiscoveryInJourney('${disc.id}')">
-          ${isAdded ? '✓ Remove from Journey' : '+ Add to Journey'}
+          ${isAdded ? t('popup-remove-journey') : t('popup-add-to-journey')}
         </button>
       </div>
     `;
@@ -842,6 +1037,7 @@ function renderDiscoveryMapMarkers() {
 // ============================================================================
 function updateRecalculatorTotals() {
   const base = calculateBaseRouteTotals();
+  const isTamil = getCurrentLanguage() === 'ta';
 
   // Added discoveries sum
   let addedDetourDist = 0;
@@ -936,13 +1132,21 @@ function updateRecalculatorTotals() {
 
   if (formulaBadge) {
     if (state.transportMode === 'car') {
-      formulaBadge.textContent = 'Formula: Car (Distance ÷ Mileage) × Fuel Price + Tolls';
+      formulaBadge.textContent = isTamil
+        ? 'சூத்திரம்: கார் (தூரம் ÷ மைலேஜ்) × எரிபொருள் விலை + சுங்கம்'
+        : 'Formula: Car (Distance ÷ Mileage) × Fuel Price + Tolls';
     } else if (state.transportMode === 'bike') {
-      formulaBadge.textContent = 'Formula: Bike (Distance ÷ Mileage) × Fuel Price (No tolls)';
+      formulaBadge.textContent = isTamil
+        ? 'சூத்திரம்: பைக் (தூரம் ÷ மைலேஜ்) × எரிபொருள் விலை (சுங்கம் இல்லை)'
+        : 'Formula: Bike (Distance ÷ Mileage) × Fuel Price (No tolls)';
     } else if (state.transportMode === 'public') {
-      formulaBadge.textContent = 'Formula: Public Transit Distance × ₹1.85/km estimated fare';
+      formulaBadge.textContent = isTamil
+        ? 'சூத்திரம்: பொது போக்குவரத்து தூரம் × ₹1.85/கி.மீ. மதிப்பீட்டு கட்டணம்'
+        : 'Formula: Public Transit Distance × ₹1.85/km estimated fare';
     } else if (state.transportMode === 'mixed') {
-      formulaBadge.textContent = 'Formula: Mixed 50% Public Rail/Bus (₹1.85/km) + 50% Car Fuel';
+      formulaBadge.textContent = isTamil
+        ? 'சூத்திரம்: கலப்பு 50% பொது போக்குவரத்து (₹1.85/கி.மீ.) + 50% கார் எரிபொருள்'
+        : 'Formula: Mixed 50% Public Rail/Bus (₹1.85/km) + 50% Car Fuel';
     }
   }
 
@@ -991,11 +1195,11 @@ function updateRecalculatorTotals() {
 
   if (timeUsedEl && timeRemEl) {
     const availMinutes = state.availableExtraTime.maxMinutes || 120;
-    if (timeLimitLabel) timeLimitLabel.textContent = `Limit: ${state.availableExtraTime.label}`;
+    if (timeLimitLabel) timeLimitLabel.textContent = `${t('time-limit')} ${state.availableExtraTime.label}`;
     timeUsedEl.textContent = fmtTime(addedTimeMinutes);
 
     if (availMinutes >= 900) {
-      timeRemEl.textContent = 'Flexible';
+      timeRemEl.textContent = isTamil ? 'நெகிழ்வான' : 'Flexible';
       if (timeAlert) timeAlert.style.display = 'none';
       if (timeBar) timeBar.style.width = '30%';
     } else {
@@ -1035,7 +1239,7 @@ function updateFinalItineraryTimeline() {
   const listEl = document.getElementById('timeline-flow-list');
   if (!listEl) return;
 
-  const fullRoute = getFullMainRoute();
+  const isTamil = getCurrentLanguage() === 'ta';
   const startDest = DESTINATIONS.find(d => d.id === state.startingPoint) || DESTINATIONS[0];
 
   let html = `
@@ -1045,10 +1249,10 @@ function updateFinalItineraryTimeline() {
       </div>
       <div class="timeline-node-content" style="border-color: rgba(16, 185, 129, 0.35); background: rgba(16, 185, 129, 0.05);">
         <div class="timeline-node-header">
-          <h4 class="tn-title">Origin: ${startDest.name} (${startDest.tamilName})</h4>
-          <span class="tn-tag" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">STARTING POINT</span>
+          <h4 class="tn-title">${t('origin-label')} ${startDest.name} (${startDest.tamilName})</h4>
+          <span class="tn-tag" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">${t('starting-point-tag')}</span>
         </div>
-        <p class="tn-desc">${startDest.tagline} — Departure point for your Tamil Nadu journey.</p>
+        <p class="tn-desc">${startDest.tagline} — ${t('departure-tagline')}</p>
       </div>
     </div>
   `;
@@ -1057,7 +1261,7 @@ function updateFinalItineraryTimeline() {
   const subsequentDests = state.selectedDestinations.filter(id => id !== state.startingPoint);
 
   if (subsequentDests.length === 0) {
-    html += `<div style="color: #64748b; font-size: 0.88rem; padding: 12px 0;">Select destinations on the map to expand your travel itinerary from ${startDest.name}.</div>`;
+    html += `<div style="color: #64748b; font-size: 0.88rem; padding: 12px 0;">${t('select-dest-expand')} ${isTamil ? startDest.tamilName : startDest.name}.</div>`;
     listEl.innerHTML = html;
     return;
   }
@@ -1069,12 +1273,12 @@ function updateFinalItineraryTimeline() {
     html += `
       <div class="timeline-node-item">
         <div class="timeline-node-marker">
-          <span style="font-size: 10px; font-weight: 800; color: #fff;">${i+1}</span>
+          <span style="font-size: 10px; font-weight: 800; color: #fff;">${i + 1}</span>
         </div>
         <div class="timeline-node-content">
           <div class="timeline-node-header">
             <h4 class="tn-title">${dest.name} (${dest.tamilName})</h4>
-            <span class="tn-tag">DESTINATION ${i+1}</span>
+            <span class="tn-tag">${t('destination-tag')} ${i + 1}</span>
           </div>
           <p class="tn-desc">${dest.description}</p>
         </div>
@@ -1090,12 +1294,12 @@ function updateFinalItineraryTimeline() {
             <div class="timeline-node-marker">✦</div>
             <div class="timeline-node-content">
               <div class="timeline-node-header">
-                <h4 class="tn-title">Discovery: ${disc.name}</h4>
-                <span class="tn-tag">ADDED EXPERIENCE</span>
+                <h4 class="tn-title">${t('discovery-prefix')} ${disc.name}</h4>
+                <span class="tn-tag">${t('added-experience-tag')}</span>
               </div>
               <p class="tn-desc">${disc.experienceDescription}</p>
               <div style="font-size: 0.78rem; color: #34d399; margin-top: 6px; font-weight: 700;">
-                +${disc.distanceKm} km detour · +${disc.travelTimeMinutes + disc.visitDurationMinutes} min · +₹${disc.entryCost + disc.foodCost + disc.localTransportCost + disc.parkingCost}
+                +${disc.distanceKm} km ${t('detour-label')} · +${disc.travelTimeMinutes + disc.visitDurationMinutes} min · +₹${disc.entryCost + disc.foodCost + disc.localTransportCost + disc.parkingCost}
               </div>
             </div>
           </div>
@@ -1108,7 +1312,7 @@ function updateFinalItineraryTimeline() {
 }
 
 // Global hook to toggle discovery addition
-window.toggleDiscoveryInJourney = function(discId) {
+window.toggleDiscoveryInJourney = function (discId) {
   if (state.selectedDiscoveries.has(discId)) {
     state.selectedDiscoveries.delete(discId);
   } else {
@@ -1133,7 +1337,7 @@ window.toggleDiscoveryInJourney = function(discId) {
 // ============================================================================
 // DISCOVERY DETAILS MODAL (SECTION 28)
 // ============================================================================
-window.openDiscoveryModal = function(discId) {
+window.openDiscoveryModal = function (discId) {
   const disc = DISCOVERIES.find(d => d.id === discId);
   if (!disc) return;
 
@@ -1152,9 +1356,9 @@ window.openDiscoveryModal = function(discId) {
   const mins = totalTimeMins % 60;
   const timeFormatted = hrs > 0 ? `+${hrs}h ${mins}m` : `+${mins}m`;
 
-  document.getElementById('modal-tradeoff-metrics').textContent = 
+  document.getElementById('modal-tradeoff-metrics').textContent =
     `+${disc.distanceKm} km · ${timeFormatted} · +₹${meta.totalCost}`;
-  
+
   document.getElementById('modal-experience-gained').textContent = disc.experienceGained;
   document.getElementById('modal-why-worth').textContent = disc.whyWorthIt;
 
@@ -1185,7 +1389,7 @@ function updateModalActionButton(discId) {
   if (!btn) return;
   const isAdded = state.selectedDiscoveries.has(discId);
   btn.className = `btn-card-toggle ${isAdded ? 'in-journey' : ''}`;
-  btn.innerHTML = `<span>${isAdded ? '✓ Added to Journey' : '+ Add to Journey'}</span>`;
+  btn.innerHTML = `<span>${isAdded ? t('modal-added') : t('modal-add-journey')}</span>`;
   btn.onclick = () => window.toggleDiscoveryInJourney(discId);
 }
 
@@ -1275,6 +1479,10 @@ function executeAnimatedSearch() {
 // EVENT LISTENERS SETUP
 // ============================================================================
 function setupEventListeners() {
+  // Language switcher toggle listeners
+  document.getElementById('btn-lang-en')?.addEventListener('click', () => switchLanguage('en'));
+  document.getElementById('btn-lang-ta')?.addEventListener('click', () => switchLanguage('ta'));
+
   // Demo Triggers
   document.getElementById('btn-demo-header')?.addEventListener('click', triggerDemoPreset);
   document.getElementById('btn-hero-demo')?.addEventListener('click', triggerDemoPreset);

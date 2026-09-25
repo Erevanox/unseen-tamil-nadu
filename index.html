@@ -6,10 +6,10 @@
   <title>UNSEEN TAMIL NADU — Smart Travel Planner</title>
   <meta name="description" content="You already know where you're going. Discover what you're missing. Find worthwhile, less-obvious experiences around your Tamil Nadu route with calculated time, distance, and costs.">
   
-  <!-- Google Fonts -->
+  <!-- Google Fonts: JetBrains Mono, Outfit, Plus Jakarta Sans, Mukta Malar, Noto Sans Tamil -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Mukta+Malar:wght@400;500;600;700;800&family=Noto+Sans+Tamil:wght@400;500;600;700;800;900&family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <!-- Leaflet Map CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
@@ -20,6 +20,12 @@
 <body>
 
   <!-- ============================================================================
+       CUSTOM ANIMATED CURSOR ELEMENTS
+       ============================================================================ -->
+  <div class="custom-cursor-dot" id="cursor-dot" aria-hidden="true"></div>
+  <div class="custom-cursor-aura" id="cursor-aura" aria-hidden="true"></div>
+
+  <!-- ============================================================================
        SITE HEADER
        ============================================================================ -->
   <header class="site-header" id="site-header">
@@ -27,23 +33,34 @@
       <div class="brand-wrapper">
         <div class="brand-logo-icon">TN</div>
         <div>
-          <span class="brand-title">UNSEEN TAMIL NADU</span>
-          <span class="brand-tagline-badge">Smart Route Discoveries</span>
+          <span class="brand-title" data-i18n="brand-title">UNSEEN TAMIL NADU</span>
+          <span class="brand-tagline-badge" data-i18n="brand-tagline">Smart Route Discoveries</span>
         </div>
       </div>
 
       <nav class="nav-links">
-        <a href="#map-workspace" class="nav-link">Interactive Map</a>
-        <a href="#how-it-works" class="nav-link">How It Works</a>
-        <a href="#preferences-section" class="nav-link">Travel Limits</a>
-        <a href="#results-section" class="nav-link">7 Discoveries</a>
-        <a href="#differentiation" class="nav-link">Why Us</a>
+        <a href="#map-workspace" class="nav-link" data-i18n="nav-interactive-map">Interactive Map</a>
+        <a href="#how-it-works" class="nav-link" data-i18n="nav-how-it-works">How It Works</a>
+        <a href="#preferences-section" class="nav-link" data-i18n="nav-travel-limits">Travel Limits</a>
+        <a href="#results-section" class="nav-link" data-i18n="nav-discoveries">7 Discoveries</a>
+        <a href="#differentiation" class="nav-link" data-i18n="nav-why-us">Why Us</a>
       </nav>
 
       <div class="header-actions">
+        <!-- English / Tamil Language Switcher Pill Toggle -->
+        <div class="lang-switch-container" id="lang-switch-container" role="group" aria-label="Language selection toggle">
+          <button type="button" class="lang-pill-btn active" id="btn-lang-en" data-lang="en" aria-pressed="true" title="Switch to English">
+            <span>EN</span>
+          </button>
+          <button type="button" class="lang-pill-btn" id="btn-lang-ta" data-lang="ta" aria-pressed="false" title="தமிழுக்கு மாற்றவும்">
+            <span>தமிழ்</span>
+          </button>
+          <div class="lang-pill-slider" id="lang-pill-slider"></div>
+        </div>
+
         <button id="btn-demo-header" class="btn-demo-preset" title="Populate demo journey & see 7 discoveries">
           <span class="demo-sparkle">✨</span>
-          <span>Try an Example</span>
+          <span data-i18n="btn-try-example">Try an Example</span>
         </button>
       </div>
     </div>
@@ -57,46 +74,46 @@
       <div class="hero-content">
         <div class="hero-pill-badge">
           <span class="hero-pill-dot"></span>
-          <span>Next-Generation Travel Intelligence</span>
+          <span data-i18n="hero-pill">Next-Generation Travel Intelligence</span>
         </div>
         
-        <h2 class="hero-heading-lead">You already know where you're going.</h2>
-        <h1 class="hero-heading-main">Discover what you're missing.</h1>
+        <h2 class="hero-heading-lead" data-i18n="hero-heading-lead">You already know where you're going.</h2>
+        <h1 class="hero-heading-main" data-i18n="hero-heading-main">Discover what you're missing.</h1>
         
-        <p class="hero-subtitle">
+        <p class="hero-subtitle" data-i18n="hero-subtitle">
           Choose your Tamil Nadu journey. We'll find worthwhile experiences just beyond the obvious route, calculating the exact additional time, distance, and estimated cost so you stay in total control.
         </p>
 
         <div class="hero-cta-group">
           <a href="#map-workspace" id="btn-hero-explore" class="btn-primary-explore">
-            <span>Explore Tamil Nadu</span>
+            <span data-i18n="btn-explore">Explore Tamil Nadu</span>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </a>
           
           <button id="btn-hero-demo" class="btn-secondary-demo">
             <span class="demo-sparkle">✨</span>
-            <span>Try an Example (Chennai → Madurai)</span>
+            <span data-i18n="btn-hero-demo-text">Try an Example (Chennai → Madurai)</span>
           </button>
         </div>
 
         <div class="hero-tags-row">
-          <span>Food</span>
+          <span data-i18n="hero-tag-food">Food</span>
           <span class="hero-tags-dots">·</span>
-          <span>Culture</span>
+          <span data-i18n="hero-tag-culture">Culture</span>
           <span class="hero-tags-dots">·</span>
-          <span>History</span>
+          <span data-i18n="hero-tag-history">History</span>
           <span class="hero-tags-dots">·</span>
-          <span>Nature</span>
+          <span data-i18n="hero-tag-nature">Nature</span>
           <span class="hero-tags-dots">·</span>
-          <span>Local Life</span>
+          <span data-i18n="hero-tag-local">Local Life</span>
         </div>
       </div>
 
       <!-- Right: Live Core Value Proposition Card -->
       <div class="hero-stats-card">
         <div class="value-prop-header">
-          <div class="value-prop-lead">The Unseen Philosophy</div>
-          <div class="value-prop-quote">
+          <div class="value-prop-lead" data-i18n="value-prop-lead">The Unseen Philosophy</div>
+          <div class="value-prop-quote" data-i18n="value-prop-quote">
             “We don't tell you where to go. We show you what you're missing and calculate what it costs to experience it.”
           </div>
         </div>
@@ -104,19 +121,19 @@
         <div class="hero-features-grid">
           <div class="hero-feature-box">
             <div class="hfb-num">20</div>
-            <div class="hfb-label">Authentic Tamil Nadu Hubs</div>
+            <div class="hfb-label" data-i18n="hfb-label-hubs">Authentic Tamil Nadu Hubs</div>
           </div>
           <div class="hero-feature-box">
             <div class="hfb-num">45+</div>
-            <div class="hfb-label">Less-Obvious Curated Gems</div>
+            <div class="hfb-label" data-i18n="hfb-label-gems">Less-Obvious Curated Gems</div>
           </div>
           <div class="hero-feature-box">
             <div class="hfb-num">20-30 km</div>
-            <div class="hfb-label">Intelligent Detour Search Radius</div>
+            <div class="hfb-label" data-i18n="hfb-label-radius">Intelligent Detour Search Radius</div>
           </div>
           <div class="hero-feature-box">
             <div class="hfb-num">Exact ₹ & Min</div>
-            <div class="hfb-label">Transparent Trade-off Calculations</div>
+            <div class="hfb-label" data-i18n="hfb-label-tradeoff">Transparent Trade-off Calculations</div>
           </div>
         </div>
       </div>
@@ -128,40 +145,40 @@
        ============================================================================ -->
   <section class="section-how-it-works" id="how-it-works">
     <div class="section-header-centered">
-      <div class="section-label">How It Works</div>
-      <h2 class="section-title">5 Steps to a Smarter Journey</h2>
-      <p class="section-desc">Keep your dream destinations. Let our engine calculate the detours worth taking.</p>
+      <div class="section-label" data-i18n="section-label-how">How It Works</div>
+      <h2 class="section-title" data-i18n="section-title-how">5 Steps to a Smarter Journey</h2>
+      <p class="section-desc" data-i18n="section-desc-how">Keep your dream destinations. Let our engine calculate the detours worth taking.</p>
     </div>
 
     <div class="how-steps-grid">
       <div class="how-step-card">
         <div class="step-number">01</div>
-        <h3 class="step-card-title">Choose your route</h3>
-        <p class="step-card-text">Select the Tamil Nadu destinations you already plan to visit on the authentic interactive map.</p>
+        <h3 class="step-card-title" data-i18n="step1-title">Choose your route</h3>
+        <p class="step-card-text" data-i18n="step1-text">Select the Tamil Nadu destinations you already plan to visit on the authentic interactive map.</p>
       </div>
 
       <div class="how-step-card">
         <div class="step-number">02</div>
-        <h3 class="step-card-title">Tell us your limits</h3>
-        <p class="step-card-text">Set your interests, available extra time, extra budget, transport mode, and exploration time of day.</p>
+        <h3 class="step-card-title" data-i18n="step2-title">Tell us your limits</h3>
+        <p class="step-card-text" data-i18n="step2-text">Set your interests, available extra time, extra budget, transport mode, and exploration time of day.</p>
       </div>
 
       <div class="how-step-card">
         <div class="step-number">03</div>
-        <h3 class="step-card-title">Discover what you're missing</h3>
-        <p class="step-card-text">Our engine evaluates candidates 20–30 km around your route for less-obvious, high-experience gems.</p>
+        <h3 class="step-card-title" data-i18n="step3-title">Discover what you're missing</h3>
+        <p class="step-card-text" data-i18n="step3-text">Our engine evaluates candidates 20–30 km around your route for less-obvious, high-experience gems.</p>
       </div>
 
       <div class="how-step-card">
         <div class="step-number">04</div>
-        <h3 class="step-card-title">See the real trade-off</h3>
-        <p class="step-card-text">We calculate the exact additional distance (+km), travel & experience time (+min), and estimated cost (+₹).</p>
+        <h3 class="step-card-title" data-i18n="step4-title">See the real trade-off</h3>
+        <p class="step-card-text" data-i18n="step4-text">We calculate the exact additional distance (+km), travel & experience time (+min), and estimated cost (+₹).</p>
       </div>
 
       <div class="how-step-card">
         <div class="step-number">05</div>
-        <h3 class="step-card-title">Decide</h3>
-        <p class="step-card-text">Add only the discoveries you believe are worth your time. Watch the entire itinerary re-sync instantly.</p>
+        <h3 class="step-card-title" data-i18n="step5-title">Decide</h3>
+        <p class="step-card-text" data-i18n="step5-text">Add only the discoveries you believe are worth your time. Watch the entire itinerary re-sync instantly.</p>
       </div>
     </div>
   </section>
@@ -176,22 +193,22 @@
       <div class="map-panel-card">
         <div class="map-card-header">
           <div class="map-title-row">
-            <h3 class="map-title">Tamil Nadu Route & Discovery Map</h3>
-            <span class="brand-tagline-badge" id="map-status-pill">Click a city to add to journey</span>
+            <h3 class="map-title" data-i18n="map-title">Tamil Nadu Route & Discovery Map</h3>
+            <span class="brand-tagline-badge" id="map-status-pill" data-i18n="map-status-default">Click a city to add to journey</span>
           </div>
 
           <div class="map-legend-pills">
             <div class="legend-item">
               <span class="legend-dot main-dest"></span>
-              <span>Your Destinations</span>
+              <span data-i18n="legend-your-dest">Your Destinations</span>
             </div>
             <div class="legend-item">
               <span class="legend-dot discovery"></span>
-              <span>7 Discoveries</span>
+              <span data-i18n="legend-discoveries">7 Discoveries</span>
             </div>
             <div class="legend-item">
               <span class="legend-dot added"></span>
-              <span>Added to Journey</span>
+              <span data-i18n="legend-added">Added to Journey</span>
             </div>
           </div>
         </div>
@@ -204,19 +221,19 @@
         <div class="journey-tray-card" id="journey-tray">
           <div class="journey-tray-header">
             <div class="tray-title-group">
-              <h3>YOUR JOURNEY</h3>
+              <h3 data-i18n="journey-title">YOUR JOURNEY</h3>
               <span id="journey-dest-count">0 destinations selected</span>
             </div>
-            <button id="btn-clear-journey" class="btn-clear-tray" title="Clear all stops">Clear All</button>
+            <button id="btn-clear-journey" class="btn-clear-tray" data-i18n="btn-clear-all" data-i18n-title="btn-clear-all" title="Clear all stops">Clear All</button>
           </div>
 
           <!-- Starting Point Selection -->
           <div class="starting-point-selection-row" style="margin-bottom: 16px; padding: 12px 14px; background: rgba(15, 20, 31, 0.7); border: 1px solid rgba(255, 107, 53, 0.35); border-radius: var(--radius-md);">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
               <span style="font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-orange); display: flex; align-items: center; gap: 6px;">
-                <span>🚩</span> Starting Point (Origin)
+                <span>🚩</span> <span data-i18n="starting-point-label">Starting Point (Origin)</span>
               </span>
-              <span style="font-size: 0.72rem; color: #94a3b8;">Trip Departure</span>
+              <span style="font-size: 0.72rem; color: #94a3b8;" data-i18n="trip-departure">Trip Departure</span>
             </div>
             <select id="select-starting-point" style="width: 100%; background: #161c27; color: #fff; border: 1px solid var(--border-medium); border-radius: 8px; padding: 8px 12px; font-weight: 600; font-size: 0.9rem; cursor: pointer;">
               <!-- Populated dynamically by app.js -->
@@ -226,23 +243,23 @@
           <!-- List of Selected Stops -->
           <div class="journey-stops-list" id="journey-stops-list">
             <div class="empty-tray-state" id="empty-tray-msg">
-              <p>No destinations chosen yet.</p>
-              <p style="margin-top: 6px; font-size: 0.8rem; color: #ff6b35;">Click pins on the Tamil Nadu map or click below:</p>
+              <p data-i18n="no-dest-yet">No destinations chosen yet.</p>
+              <p style="margin-top: 6px; font-size: 0.8rem; color: #ff6b35;" data-i18n="click-pins-or">Click pins on the Tamil Nadu map or click below:</p>
             </div>
           </div>
 
           <!-- Leg by Leg Route Breakdown (Section 21) -->
           <div class="route-breakdown-section" id="route-breakdown-box" style="display: none;">
             <div class="rb-title">
-              <span>Route Breakdown</span>
-              <span style="font-size: 0.72rem; color: #94a3b8;">(Estimated Highway Corridors)</span>
+              <span data-i18n="route-breakdown">Route Breakdown</span>
+              <span style="font-size: 0.72rem; color: #94a3b8;" data-i18n="route-breakdown-sub">(Estimated Highway Corridors)</span>
             </div>
             <table class="rb-table">
               <thead>
                 <tr>
-                  <th>Leg Corridor</th>
-                  <th>Distance</th>
-                  <th>Travel Time</th>
+                  <th data-i18n="th-leg">Leg Corridor</th>
+                  <th data-i18n="th-distance">Distance</th>
+                  <th data-i18n="th-travel-time">Travel Time</th>
                 </tr>
               </thead>
               <tbody id="route-breakdown-tbody"></tbody>
@@ -252,12 +269,12 @@
           <!-- Actions -->
           <div class="tray-action-buttons">
             <button id="btn-continue-to-limits" class="btn-continue-wizard" disabled>
-              <span>Continue to Travel Limits</span>
+              <span data-i18n="btn-continue-limits">Continue to Travel Limits</span>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </button>
 
             <button id="btn-try-example-tray" class="btn-secondary-demo" style="width: 100%; justify-content: center;">
-              <span>✨ Try Example: Chennai → Madurai</span>
+              <span data-i18n="btn-try-example-tray">✨ Try Example: Chennai → Madurai</span>
             </button>
           </div>
         </div>
@@ -274,9 +291,9 @@
       
       <!-- Step 2: Interests -->
       <div class="wizard-step-header">
-        <div class="step-eyebrow">Step 02 — Personal Tastes</div>
-        <h3 class="step-question">What kind of experiences do you want?</h3>
-        <p style="font-size: 0.88rem; color: #94a3b8; margin-top: 4px;">Select all that intrigue you. We use this to score and rank authentic local experiences.</p>
+        <div class="step-eyebrow" data-i18n="step02-eyebrow">Step 02 — Personal Tastes</div>
+        <h3 class="step-question" data-i18n="step02-question">What kind of experiences do you want?</h3>
+        <p style="font-size: 0.88rem; color: #94a3b8; margin-top: 4px;" data-i18n="step02-sub">Select all that intrigue you. We use this to score and rank authentic local experiences.</p>
       </div>
 
       <div class="interests-grid" id="interests-grid">
@@ -289,9 +306,9 @@
         <!-- Step 3: Extra Time -->
         <div>
           <div class="wizard-step-header">
-            <div class="step-eyebrow">Step 03 — Time Flexibility</div>
-            <h3 class="step-question" style="font-size: 1.35rem;">How much extra time can you spare?</h3>
-            <p style="font-size: 0.82rem; color: #ff8a5c; margin-top: 4px;">Additional detour & experience time, not total trip duration.</p>
+            <div class="step-eyebrow" data-i18n="step03-eyebrow">Step 03 — Time Flexibility</div>
+            <h3 class="step-question" style="font-size: 1.35rem;" data-i18n="step03-question">How much extra time can you spare?</h3>
+            <p style="font-size: 0.82rem; color: #ff8a5c; margin-top: 4px;" data-i18n="step03-sub">Additional detour & experience time, not total trip duration.</p>
           </div>
           <div class="options-pill-grid" id="time-options-grid">
             <!-- Rendered by app.js -->
@@ -301,9 +318,9 @@
         <!-- Step 4: Extra Budget -->
         <div>
           <div class="wizard-step-header">
-            <div class="step-eyebrow">Step 04 — Financial Comfort</div>
-            <h3 class="step-question" style="font-size: 1.35rem;">How much extra are you comfortable spending?</h3>
-            <p style="font-size: 0.82rem; color: #ff8a5c; margin-top: 4px;">Additional budget for tastings, artisans, entry & local transport.</p>
+            <div class="step-eyebrow" data-i18n="step04-eyebrow">Step 04 — Financial Comfort</div>
+            <h3 class="step-question" style="font-size: 1.35rem;" data-i18n="step04-question">How much extra are you comfortable spending?</h3>
+            <p style="font-size: 0.82rem; color: #ff8a5c; margin-top: 4px;" data-i18n="step04-sub">Additional budget for tastings, artisans, entry & local transport.</p>
           </div>
           <div class="options-pill-grid" id="budget-options-grid">
             <!-- Rendered by app.js -->
@@ -314,8 +331,8 @@
 
       <!-- Step 5: Transport Mode & Assumptions -->
       <div class="wizard-step-header" style="margin-top: 10px;">
-        <div class="step-eyebrow">Step 05 — Mobility</div>
-        <h3 class="step-question">How are you travelling?</h3>
+        <div class="step-eyebrow" data-i18n="step05-eyebrow">Step 05 — Mobility</div>
+        <h3 class="step-question" data-i18n="step05-question">How are you travelling?</h3>
       </div>
 
       <div class="transport-grid" id="transport-grid">
@@ -325,37 +342,37 @@
       <!-- Vehicle Assumptions Box (Section 11) -->
       <div class="vehicle-assumptions-box" id="vehicle-assumptions-box">
         <div class="assumption-label-group">
-          <div class="assumption-heading" id="assumption-heading-text">Vehicle Cost Calculation Assumptions</div>
-          <div class="assumption-sub" id="assumption-sub-text">Editable rates used in the fuel cost formula: (Distance ÷ Mileage) × Fuel Price [Estimated]</div>
+          <div class="assumption-heading" id="assumption-heading-text" data-i18n="assumption-heading-car">Vehicle Cost Calculation Assumptions</div>
+          <div class="assumption-sub" id="assumption-sub-text" data-i18n="assumption-sub-car">Editable rates used in the fuel cost formula: (Distance ÷ Mileage) × Fuel Price [Estimated]</div>
         </div>
         <div class="assumption-inputs-row" id="vehicle-inputs-row">
           <div class="input-with-label" id="mileage-input-group">
-            <label for="input-mileage">Mileage:</label>
+            <label for="input-mileage" data-i18n="label-mileage">Mileage:</label>
             <input type="number" id="input-mileage" value="18" min="5" max="80" step="0.5">
-            <span>km/L</span>
+            <span data-i18n="unit-kmpl">km/L</span>
           </div>
           <div class="input-with-label" id="fuel-input-group">
-            <label for="input-fuel-price">Fuel Price:</label>
+            <label for="input-fuel-price" data-i18n="label-fuel-price">Fuel Price:</label>
             <span>₹</span>
             <input type="number" id="input-fuel-price" value="105" min="50" max="200" step="1">
-            <span>/L</span>
+            <span data-i18n="unit-per-litre">/L</span>
           </div>
         </div>
         <!-- Public Transport Fare Info (shown when Public Transport is selected) -->
         <div class="public-transit-fare-info" id="public-transit-fare-row" style="display: none; align-items: center; gap: 12px; background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.3); padding: 8px 16px; border-radius: 8px;">
           <span style="font-size: 1.2rem;">🚌</span>
           <div>
-            <div style="font-size: 0.84rem; font-weight: 700; color: #38bdf8;">Estimated Public Transport Fare: ₹1.85 / km</div>
-            <div style="font-size: 0.74rem; color: #94a3b8;">State express bus & second-class intercity rail fare average across Tamil Nadu</div>
+            <div style="font-size: 0.84rem; font-weight: 700; color: #38bdf8;" data-i18n="public-transit-fare-title">Estimated Public Transport Fare: ₹1.85 / km</div>
+            <div style="font-size: 0.74rem; color: #94a3b8;" data-i18n="public-transit-fare-sub">State express bus & second-class intercity rail fare average across Tamil Nadu</div>
           </div>
         </div>
       </div>
 
       <!-- Step 6: Time of Day -->
       <div class="wizard-step-header" style="margin-top: 32px;">
-        <div class="step-eyebrow">Step 06 — Timing & Ambience</div>
-        <h3 class="step-question">When will you explore?</h3>
-        <p style="font-size: 0.88rem; color: #94a3b8; margin-top: 4px;">Discoveries are ranked by opening hours and the best time of day to visit.</p>
+        <div class="step-eyebrow" data-i18n="step06-eyebrow">Step 06 — Timing & Ambience</div>
+        <h3 class="step-question" data-i18n="step06-question">When will you explore?</h3>
+        <p style="font-size: 0.88rem; color: #94a3b8; margin-top: 4px;" data-i18n="step06-sub">Discoveries are ranked by opening hours and the best time of day to visit.</p>
       </div>
 
       <div class="time-of-day-grid" id="time-of-day-grid">
@@ -365,7 +382,7 @@
       <!-- Wizard Action Footer -->
       <div class="wizard-footer-actions">
         <button id="btn-find-missing" class="btn-launch-discovery">
-          <span>Find What I'm Missing</span>
+          <span data-i18n="btn-find-missing">Find What I'm Missing</span>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </button>
       </div>
@@ -379,36 +396,36 @@
   <div class="search-loading-overlay" id="loading-overlay">
     <div class="loading-sequence-card">
       <div class="loading-spinner-ring"></div>
-      <h3 class="loading-main-title">Finding what you're missing...</h3>
+      <h3 class="loading-main-title" data-i18n="loading-title">Finding what you're missing...</h3>
       
       <div class="loading-steps-stack" id="loading-steps-stack">
         <div class="loading-step-row" id="step-0">
           <span class="loading-step-icon">○</span>
-          <span>Checking nearby places (20–30 km radius)</span>
+          <span data-i18n="loading-step-0">Checking nearby places (20–30 km radius)</span>
         </div>
         <div class="loading-step-row" id="step-1">
           <span class="loading-step-icon">○</span>
-          <span>Matching your interests</span>
+          <span data-i18n="loading-step-1">Matching your interests</span>
         </div>
         <div class="loading-step-row" id="step-2">
           <span class="loading-step-icon">○</span>
-          <span>Checking opening hours & suitability</span>
+          <span data-i18n="loading-step-2">Checking opening hours & suitability</span>
         </div>
         <div class="loading-step-row" id="step-3">
           <span class="loading-step-icon">○</span>
-          <span>Calculating detour travel time</span>
+          <span data-i18n="loading-step-3">Calculating detour travel time</span>
         </div>
         <div class="loading-step-row" id="step-4">
           <span class="loading-step-icon">○</span>
-          <span>Comparing distance and cost</span>
+          <span data-i18n="loading-step-4">Comparing distance and cost</span>
         </div>
         <div class="loading-step-row" id="step-5">
           <span class="loading-step-icon">○</span>
-          <span>Finding less-obvious experiences</span>
+          <span data-i18n="loading-step-5">Finding less-obvious experiences</span>
         </div>
         <div class="loading-step-row" id="step-6">
           <span class="loading-step-icon">○</span>
-          <span>Building your 7 discoveries</span>
+          <span data-i18n="loading-step-6">Building your 7 discoveries</span>
         </div>
       </div>
     </div>
@@ -421,12 +438,12 @@
     
     <div class="results-header-banner">
       <div class="results-header-text">
-        <h2>You already planned the journey. Here's what you might be missing.</h2>
-        <p>7 experiences worth adding to your route.</p>
+        <h2 data-i18n="results-heading">You already planned the journey. Here's what you might be missing.</h2>
+        <p data-i18n="results-sub">7 experiences worth adding to your route.</p>
       </div>
 
       <div class="results-header-actions">
-        <span class="brand-tagline-badge" id="results-dest-context">Around your selected route</span>
+        <span class="brand-tagline-badge" id="results-dest-context" data-i18n="results-context">Around your selected route</span>
       </div>
     </div>
 
@@ -441,63 +458,63 @@
     <div class="trip-impact-card" id="trip-impact-card">
       <div class="impact-header-row">
         <div>
-          <h3 class="impact-title">Dynamic Route Recalculator</h3>
-          <p style="font-size: 0.88rem; color: #94a3b8;">Adding or removing an experience recalculates the exact impact on distance, travel time, and budget.</p>
+          <h3 class="impact-title" data-i18n="impact-title">Dynamic Route Recalculator</h3>
+          <p style="font-size: 0.88rem; color: #94a3b8;" data-i18n="impact-desc">Adding or removing an experience recalculates the exact impact on distance, travel time, and budget.</p>
         </div>
-        <span class="impact-badge-tag">LIVE ENGINE CALCULATION</span>
+        <span class="impact-badge-tag" data-i18n="impact-badge">LIVE ENGINE CALCULATION</span>
       </div>
 
       <!-- Before / After Comparison Grid (Section 23) -->
       <div class="comparison-grid">
         <div class="comparison-box">
-          <div class="comparison-heading">MAIN ROUTE (Main Trip)</div>
+          <div class="comparison-heading" data-i18n="cmp-main-route">MAIN ROUTE (Main Trip)</div>
           <div class="comparison-values-stack">
             <div class="cmp-val-line">
-              <span>Main Distance:</span>
+              <span data-i18n="cmp-main-dist">Main Distance:</span>
               <strong id="cmp-before-dist">0 km</strong>
             </div>
             <div class="cmp-val-line">
-              <span>Travel Time:</span>
+              <span data-i18n="cmp-travel-time">Travel Time:</span>
               <strong id="cmp-before-time">0h 00m</strong>
             </div>
             <div class="cmp-val-line">
-              <span>Main Trip Cost:</span>
+              <span data-i18n="cmp-main-cost">Main Trip Cost:</span>
               <strong id="cmp-before-cost">₹0</strong>
             </div>
           </div>
         </div>
 
         <div class="comparison-box">
-          <div class="comparison-heading">COMPLETE JOURNEY</div>
+          <div class="comparison-heading" data-i18n="cmp-complete">COMPLETE JOURNEY</div>
           <div class="comparison-values-stack">
             <div class="cmp-val-line">
-              <span>Total Distance:</span>
+              <span data-i18n="cmp-total-dist">Total Distance:</span>
               <strong id="cmp-after-dist">0 km</strong>
             </div>
             <div class="cmp-val-line">
-              <span>Total Trip Time:</span>
+              <span data-i18n="cmp-total-time">Total Trip Time:</span>
               <strong id="cmp-after-time">0h 00m</strong>
             </div>
             <div class="cmp-val-line">
-              <span>Total Trip Cost:</span>
+              <span data-i18n="cmp-total-cost">Total Trip Cost:</span>
               <strong id="cmp-after-cost">₹0</strong>
             </div>
           </div>
         </div>
 
         <div class="comparison-box change-box">
-          <div class="comparison-heading">ADDED DISCOVERIES (Net Impact)</div>
+          <div class="comparison-heading" data-i18n="cmp-added">ADDED DISCOVERIES (Net Impact)</div>
           <div class="comparison-values-stack">
             <div class="cmp-val-line">
-              <span>Detour Distance:</span>
+              <span data-i18n="cmp-detour-dist">Detour Distance:</span>
               <strong id="cmp-change-dist">+0 km</strong>
             </div>
             <div class="cmp-val-line">
-              <span>Additional Time:</span>
+              <span data-i18n="cmp-additional-time">Additional Time:</span>
               <strong id="cmp-change-time">+0 min</strong>
             </div>
             <div class="cmp-val-line">
-              <span>Additional Discovery Cost:</span>
+              <span data-i18n="cmp-additional-cost">Additional Discovery Cost:</span>
               <strong id="cmp-change-cost">+₹0</strong>
             </div>
           </div>
@@ -508,21 +525,21 @@
       <div class="cost-separation-banner" style="margin-bottom: 24px; padding: 18px 22px; background: rgba(15, 20, 31, 0.75); border: 1px solid rgba(255, 107, 53, 0.3); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
         <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
           <div>
-            <span style="display: block; font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Main Trip Cost</span>
+            <span style="display: block; font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;" data-i18n="cost-main-label">Main Trip Cost</span>
             <strong id="cost-sep-main" style="font-family: var(--font-mono); font-size: 1.25rem; color: #f8fafc;">₹0</strong>
           </div>
           <div style="font-size: 1.3rem; color: var(--accent-orange); font-weight: 800;">+</div>
           <div>
-            <span style="display: block; font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Additional Discovery Cost</span>
+            <span style="display: block; font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;" data-i18n="cost-discovery-label">Additional Discovery Cost</span>
             <strong id="cost-sep-discovery" style="font-family: var(--font-mono); font-size: 1.25rem; color: var(--accent-orange);">+₹0</strong>
           </div>
           <div style="font-size: 1.3rem; color: #34d399; font-weight: 800;">=</div>
           <div>
-            <span style="display: block; font-size: 0.72rem; color: #34d399; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Total Trip Cost</span>
+            <span style="display: block; font-size: 0.72rem; color: #34d399; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;" data-i18n="cost-total-label">Total Trip Cost</span>
             <strong id="cost-sep-total" style="font-family: var(--font-mono); font-size: 1.35rem; color: #34d399;">₹0</strong>
           </div>
         </div>
-        <div id="cost-formula-badge" style="font-size: 0.76rem; color: #cbd5e1; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-subtle); padding: 6px 12px; border-radius: 6px;">
+        <div id="cost-formula-badge" style="font-size: 0.76rem; color: #cbd5e1; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-subtle); padding: 6px 12px; border-radius: 6px;" data-i18n="cost-formula">
           Formula: (Distance ÷ Mileage) × Fuel Price + Tolls
         </div>
       </div>
@@ -533,9 +550,9 @@
         <!-- Budget Tracker -->
         <div class="tracker-card">
           <div class="tracker-title-row">
-            <div class="tracker-title">Budget Tracker</div>
+            <div class="tracker-title" data-i18n="budget-tracker">Budget Tracker</div>
             <div class="tracker-limit-edit">
-              <label for="input-user-budget">My Budget: ₹</label>
+              <label for="input-user-budget" data-i18n="my-budget">My Budget: ₹</label>
               <input type="number" id="input-user-budget" value="10000" step="500">
             </div>
           </div>
@@ -546,24 +563,24 @@
 
           <div class="tracker-stats-split">
             <div class="ts-col">
-              <span>Estimated Trip Cost</span>
+              <span data-i18n="est-trip-cost">Estimated Trip Cost</span>
               <strong id="budget-stat-spent">₹0</strong>
             </div>
             <div class="ts-col" style="text-align: right;">
-              <span>Remaining</span>
+              <span data-i18n="remaining">Remaining</span>
               <strong id="budget-stat-remaining">₹10,000</strong>
             </div>
           </div>
 
           <div class="tracker-alert-warning" id="budget-alert" style="display: none;">
-            <span>⚠️ You are ₹<span id="budget-over-val">0</span> over your planned budget.</span>
+            <span>⚠️ <span data-i18n="budget-over-warn">You are ₹<span id="budget-over-val">0</span> over your planned budget.</span></span>
           </div>
         </div>
 
         <!-- Extra-Time Tracker -->
         <div class="tracker-card">
           <div class="tracker-title-row">
-            <div class="tracker-title">Extra-Time Tracker</div>
+            <div class="tracker-title" data-i18n="time-tracker">Extra-Time Tracker</div>
             <span style="font-size: 0.8rem; color: #94a3b8;" id="tracker-available-time-label">Limit: 2h</span>
           </div>
 
@@ -573,18 +590,18 @@
 
           <div class="tracker-stats-split">
             <div class="ts-col">
-              <span>Extra Time Used</span>
+              <span data-i18n="extra-time-used">Extra Time Used</span>
               <strong id="time-stat-used">0m</strong>
             </div>
             <div class="ts-col" style="text-align: right;">
-              <span>Remaining</span>
+              <span data-i18n="remaining">Remaining</span>
               <strong id="time-stat-remaining">2h 00m</strong>
             </div>
           </div>
 
           <div class="tracker-alert-warning" id="time-alert" style="display: none;">
             <span>⚠️ Discoveries exceed your extra time allowance by <span id="time-over-val">0m</span>.</span>
-            <button id="btn-find-shorter" style="background: rgba(255,255,255,0.15); color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 0.72rem;">Shorter options</button>
+            <button id="btn-find-shorter" style="background: rgba(255,255,255,0.15); color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 0.72rem;" data-i18n="btn-shorter">Shorter options</button>
           </div>
         </div>
 
@@ -598,11 +615,11 @@
     <div class="final-itinerary-card" id="final-itinerary-card">
       <div class="fi-header">
         <div>
-          <h3 class="fi-title">YOUR REFINED JOURNEY</h3>
-          <p style="font-size: 0.88rem; color: #94a3b8;">Main destinations preserved, with authentic discoveries inserted into your route.</p>
+          <h3 class="fi-title" data-i18n="fi-title">YOUR REFINED JOURNEY</h3>
+          <p style="font-size: 0.88rem; color: #94a3b8;" data-i18n="fi-sub">Main destinations preserved, with authentic discoveries inserted into your route.</p>
         </div>
         <button id="btn-print-itinerary" class="btn-secondary-demo" style="padding: 8px 16px; font-size: 0.84rem;">
-          <span>🖨️ Export Summary</span>
+          <span data-i18n="btn-export">🖨️ Export Summary</span>
         </button>
       </div>
 
@@ -618,56 +635,56 @@
        ============================================================================ -->
   <section class="section-differentiation" id="differentiation">
     <div class="section-header-centered">
-      <div class="section-label">Why Unseen Tamil Nadu</div>
-      <h2 class="section-title">A Fundamentally Different Travel Philosophy</h2>
-      <p class="section-desc">Traditional planners dictate where to go. We keep your decisions and show the gems you'd otherwise drive right past.</p>
+      <div class="section-label" data-i18n="diff-section-label">Why Unseen Tamil Nadu</div>
+      <h2 class="section-title" data-i18n="diff-section-title">A Fundamentally Different Travel Philosophy</h2>
+      <p class="section-desc" data-i18n="diff-section-desc">Traditional planners dictate where to go. We keep your decisions and show the gems you'd otherwise drive right past.</p>
     </div>
 
     <div class="diff-grid">
       <div class="diff-card traditional">
-        <span class="diff-badge">Traditional Travel Planners</span>
-        <h3 class="diff-heading">“Where should I go?”</h3>
+        <span class="diff-badge" data-i18n="diff-traditional-badge">Traditional Travel Planners</span>
+        <h3 class="diff-heading" data-i18n="diff-traditional-heading">“Where should I go?”</h3>
         
         <ul class="diff-points-list">
           <li class="diff-point-item">
             <span class="diff-icon">❌</span>
-            <span>Generates generic AI itineraries from scratch that ignore what you actually care to see.</span>
+            <span data-i18n="diff-trad-1">Generates generic AI itineraries from scratch that ignore what you actually care to see.</span>
           </li>
           <li class="diff-point-item">
             <span class="diff-icon">❌</span>
-            <span>Replaces your chosen destinations with generic tourist-trap templates and crowded spots.</span>
+            <span data-i18n="diff-trad-2">Replaces your chosen destinations with generic tourist-trap templates and crowded spots.</span>
           </li>
           <li class="diff-point-item">
             <span class="diff-icon">❌</span>
-            <span>Presents vague total estimates with zero breakdown of detour distance, detour time, or hidden expenses.</span>
+            <span data-i18n="diff-trad-3">Presents vague total estimates with zero breakdown of detour distance, detour time, or hidden expenses.</span>
           </li>
           <li class="diff-point-item">
             <span class="diff-icon">❌</span>
-            <span>Focuses purely on high review counts rather than genuine cultural and artisanal depth.</span>
+            <span data-i18n="diff-trad-4">Focuses purely on high review counts rather than genuine cultural and artisanal depth.</span>
           </li>
         </ul>
       </div>
 
       <div class="diff-card ours">
-        <span class="diff-badge">Unseen Tamil Nadu</span>
-        <h3 class="diff-heading">“I already know where I'm going. What am I missing?”</h3>
+        <span class="diff-badge" data-i18n="diff-ours-badge">Unseen Tamil Nadu</span>
+        <h3 class="diff-heading" data-i18n="diff-ours-heading">“I already know where I'm going. What am I missing?”</h3>
         
         <ul class="diff-points-list">
           <li class="diff-point-item">
             <span class="diff-icon">✓</span>
-            <span><strong>You keep complete control:</strong> We never erase or rearrange your chosen destinations without your command.</span>
+            <span><strong data-i18n="diff-ours-1-bold">You keep complete control:</strong><span data-i18n="diff-ours-1"> We never erase or rearrange your chosen destinations without your command.</span></span>
           </li>
           <li class="diff-point-item">
             <span class="diff-icon">✓</span>
-            <span><strong>Exact 20–30 km radius search:</strong> Discovers living artisanal heritage, courtyard kitchens, and quiet sacred groves.</span>
+            <span><strong data-i18n="diff-ours-2-bold">Exact 20–30 km radius search:</strong><span data-i18n="diff-ours-2"> Discovers living artisanal heritage, courtyard kitchens, and quiet sacred groves.</span></span>
           </li>
           <li class="diff-point-item">
             <span class="diff-icon">✓</span>
-            <span><strong>Clear mathematical trade-offs:</strong> Shows exact +km, +minutes, and +₹ so you make informed additions.</span>
+            <span><strong data-i18n="diff-ours-3-bold">Clear mathematical trade-offs:</strong><span data-i18n="diff-ours-3"> Shows exact +km, +minutes, and +₹ so you make informed additions.</span></span>
           </li>
           <li class="diff-point-item">
             <span class="diff-icon">✓</span>
-            <span><strong>Focus on experience gained:</strong> Answers why each detour is worth your time and what sensory memory you take home.</span>
+            <span><strong data-i18n="diff-ours-4-bold">Focus on experience gained:</strong><span data-i18n="diff-ours-4"> Answers why each detour is worth your time and what sensory memory you take home.</span></span>
           </li>
         </ul>
       </div>
@@ -695,22 +712,22 @@
         
         <!-- Experience Description -->
         <div class="modal-section-box">
-          <div class="ms-label">The Experience</div>
+          <div class="ms-label" data-i18n="modal-experience-label">The Experience</div>
           <p class="ms-text" id="modal-experience-desc">Detailed experience description...</p>
         </div>
 
         <!-- Trade-off Summary: You Give vs You Get -->
         <div class="trade-off-summary-grid">
           <div class="to-box trade-off">
-            <div class="to-title">Your Trade-Off</div>
+            <div class="to-title" data-i18n="modal-tradeoff-title">Your Trade-Off</div>
             <div id="modal-tradeoff-metrics" style="font-size: 1.1rem; font-weight: 700; color: #ff8c42;">
               +0 km · +0 min · +₹0
             </div>
-            <div style="font-size: 0.76rem; color: #94a3b8; margin-top: 4px;">Detour distance, extra travel time & costs</div>
+            <div style="font-size: 0.76rem; color: #94a3b8; margin-top: 4px;" data-i18n="modal-tradeoff-sub">Detour distance, extra travel time & costs</div>
           </div>
 
           <div class="to-box gained">
-            <div class="to-title">You Get</div>
+            <div class="to-title" data-i18n="modal-you-get">You Get</div>
             <div id="modal-experience-gained" style="font-size: 0.92rem; color: #f1f5f9; font-weight: 600;">
               Unique experience summary...
             </div>
@@ -722,26 +739,26 @@
           
           <!-- Cost Breakdown Table -->
           <div class="breakdown-table-box">
-            <div class="bt-heading">Cost Breakdown (Estimated)</div>
-            <div class="bt-row"><span>Entry Fee:</span><strong id="modal-cost-entry">₹0</strong></div>
-            <div class="bt-row"><span>Food / Tasting:</span><strong id="modal-cost-food">₹0</strong></div>
-            <div class="bt-row"><span>Local Transport / Guide:</span><strong id="modal-cost-transport">₹0</strong></div>
-            <div class="bt-row"><span>Parking:</span><strong id="modal-cost-parking">₹0</strong></div>
+            <div class="bt-heading" data-i18n="modal-cost-heading">Cost Breakdown (Estimated)</div>
+            <div class="bt-row"><span data-i18n="modal-entry-fee">Entry Fee:</span><strong id="modal-cost-entry">₹0</strong></div>
+            <div class="bt-row"><span data-i18n="modal-food">Food / Tasting:</span><strong id="modal-cost-food">₹0</strong></div>
+            <div class="bt-row"><span data-i18n="modal-transport">Local Transport / Guide:</span><strong id="modal-cost-transport">₹0</strong></div>
+            <div class="bt-row"><span data-i18n="modal-parking">Parking:</span><strong id="modal-cost-parking">₹0</strong></div>
             <div class="bt-row" style="border-top: 1px solid var(--border-subtle); padding-top: 6px; color: #fff;">
-              <span>Total Additional Cost:</span>
+              <span data-i18n="modal-total-cost">Total Additional Cost:</span>
               <strong id="modal-cost-total" style="color: #ff6b35;">₹0</strong>
             </div>
           </div>
 
           <!-- Time Breakdown Table -->
           <div class="breakdown-table-box">
-            <div class="bt-heading">Time Breakdown (Estimated)</div>
-            <div class="bt-row"><span>Travel / Detour:</span><strong id="modal-time-travel">0 min</strong></div>
-            <div class="bt-row"><span>Experience Duration:</span><strong id="modal-time-visit">0 min</strong></div>
-            <div class="bt-row"><span>Route Realignment:</span><strong id="modal-time-return">0 min</strong></div>
-            <div class="bt-row"><span>Best Time Window:</span><strong id="modal-best-time" style="color: #38bdf8;">Evening</strong></div>
+            <div class="bt-heading" data-i18n="modal-time-heading">Time Breakdown (Estimated)</div>
+            <div class="bt-row"><span data-i18n="modal-travel-time">Travel / Detour:</span><strong id="modal-time-travel">0 min</strong></div>
+            <div class="bt-row"><span data-i18n="modal-visit-time">Experience Duration:</span><strong id="modal-time-visit">0 min</strong></div>
+            <div class="bt-row"><span data-i18n="modal-return-time">Route Realignment:</span><strong id="modal-time-return">0 min</strong></div>
+            <div class="bt-row"><span data-i18n="modal-best-window">Best Time Window:</span><strong id="modal-best-time" style="color: #38bdf8;">Evening</strong></div>
             <div class="bt-row" style="border-top: 1px solid var(--border-subtle); padding-top: 6px; color: #fff;">
-              <span>Total Time Added:</span>
+              <span data-i18n="modal-total-time">Total Time Added:</span>
               <strong id="modal-time-total" style="color: #ff6b35;">0 min</strong>
             </div>
           </div>
@@ -750,15 +767,15 @@
 
         <!-- Why Worth Extra Time -->
         <div class="modal-section-box">
-          <div class="ms-label">Why is this worth my extra time?</div>
+          <div class="ms-label" data-i18n="modal-why-worth">Why is this worth my extra time?</div>
           <p class="ms-text" id="modal-why-worth">Explanation of the rare value proposition...</p>
         </div>
 
         <!-- Footer Actions -->
         <div class="modal-footer-actions">
-          <button class="btn-secondary-demo" id="btn-modal-close-action">Close</button>
+          <button class="btn-secondary-demo" id="btn-modal-close-action" data-i18n="modal-close">Close</button>
           <button class="btn-card-toggle" id="btn-modal-toggle-journey">
-            <span>Add to Journey</span>
+            <span data-i18n="modal-add-journey">Add to Journey</span>
           </button>
         </div>
       </div>
@@ -772,18 +789,18 @@
     <div class="footer-container">
       <div class="footer-top-row">
         <div>
-          <div style="font-weight: 800; font-size: 1.2rem; color: #fff;">UNSEEN TAMIL NADU</div>
-          <div class="footer-quote">“Explore more without losing control of your journey.”</div>
+          <div style="font-weight: 800; font-size: 1.2rem; color: #fff;" data-i18n="footer-brand">UNSEEN TAMIL NADU</div>
+          <div class="footer-quote" data-i18n="footer-quote">“Explore more without losing control of your journey.”</div>
         </div>
-        <div style="font-size: 0.82rem; color: #94a3b8;">
+        <div style="font-size: 0.82rem; color: #94a3b8;" data-i18n="footer-edition">
           Authentic Geographic Experience Engine · Tamil Nadu Hackathon Edition
         </div>
       </div>
 
       <!-- Data Honesty Note (Section 34) -->
       <div class="footer-honesty-note">
-        <strong>Data Honesty & Transparency Notice:</strong>
-        All fuel estimates, route corridors, travel durations, and activity costs are calculated using transparent formulas and realistic structured Tamil Nadu regional demo estimates. No synthetic "live" or fake live traffic feeds are claimed.
+        <strong data-i18n="footer-honesty-title">Data Honesty & Transparency Notice:</strong>
+        <span data-i18n="footer-honesty-text">All fuel estimates, route corridors, travel durations, and activity costs are calculated using transparent formulas and realistic structured Tamil Nadu regional demo estimates. No synthetic "live" or fake live traffic feeds are claimed.</span>
       </div>
     </div>
   </footer>
